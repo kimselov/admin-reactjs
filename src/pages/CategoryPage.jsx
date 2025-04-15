@@ -1,67 +1,106 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+// import 'bootstrap/dist/css/bootstrap.min.css';
+// import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2';
 const Category = () => {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
 
-  // Fetch categories on page load
+  // Edit state
+  const [editId, setEditId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editSlug, setEditSlug] = useState('');
+
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = () => {
-    axios
-      .get('http://127.0.0.1:8000/api/categories')
-      .then(response => {
-        setCategories(response.data.data);
+    axios.get('http://127.0.0.1:8000/api/categories')
+      .then(res => setCategories(res.data.data))
+      .catch(err => console.error('Failed to fetch categories', err));
+  };
+
+  // ADD CATEGORY
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    axios.post('http://127.0.0.1:8000/api/categories', { name, slug })
+      .then(res => {
+        fetchCategories();
+        setName('');
+        setSlug('');
+        document.getElementById('addCategoryForm').reset();
+        const modal = Modal.getInstance(document.getElementById('categoryModal'));
+        modal.hide();
+        cleanBackdrop();
       })
-      .catch(error => {
-        console.error('Failed to fetch categories', error);
-      });
+      .catch(err => console.error('Add failed', err));
+  };
+
+  // OPEN EDIT MODAL
+  const openEditModal = (category) => {
+    setEditId(category.id);
+    setEditName(category.name);
+    setEditSlug(category.slug);
+
+     const modalEl = document.getElementById("editCategoryModal");
+    const modal = new Modal(modalEl);
+    modal.show();
+  };
+
+  // HANDLE UPDATE CATEGORY
+  const handleUpdateCategory = (e) => {
+    e.preventDefault();
+    axios.put(`http://127.0.0.1:8000/api/categories/${editId}`, {
+      name: editName,
+      slug: editSlug
+    })
+      .then(res => {
+        fetchCategories();
+        const modalEl = document.getElementById('editCategoryModal');
+        const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
+        modal.hide();
+        cleanBackdrop();
+      })
+      .catch(err => console.error('Edit failed', err));
   };
 
 
-//   handleAddCategory 
-const handleAddCategory = (e) => {
-    e.preventDefault();
-  
-    axios.post('http://127.0.0.1:8000/api/categories', {
-      name,
-      slug
-    })
-    .then(response => {
-      console.log('Category added:', response.data);
-      fetchCategories(); // refresh list
-      setName('');
-      setSlug('');
-    //   id of the form and reset it 
-      document.getElementById('addCategoryForm').reset();
-  
-      // Close the modal
-      const modalEl = document.getElementById('categoryModal');
-      const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
-      console.log(modal);
-      modal.hide();
-  
-      // ⚠️ Remove stuck backdrop manually
-      const backdrop = document.querySelector('.modal-backdrop');
-      if (backdrop) {
-        backdrop.remove();
+  //handle delete feature
+  const handleDeleteCategory = (id) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This action cannot be undone!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios.delete(`http://127.0.0.1:8000/api/categories/${id}`)
+          .then(() => {
+            fetchCategories();
+            Swal.fire('Deleted!', 'Category has been deleted.', 'success');
+          })
+          .catch(error => {
+            console.error('Delete failed', error);
+            Swal.fire('Error!', 'Something went wrong.', 'error');
+          });
       }
-  
-    //   // Also remove "modal-open" class from body
-      document.body.classList.remove('modal-open');  // to allow us to scroll the page 
-      document.body.style = ''; // Reset any inline styles (like overflow)
-    })
-    .catch(error => {
-      console.error('Error adding category:', error);
     });
   };
+
   
+  const cleanBackdrop = () => {
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) backdrop.remove();
+    document.body.classList.remove('modal-open'); //allow user to scroll
+    document.body.style = '';
+  };
 
   return (
     <div className="container mt-4">
@@ -88,32 +127,26 @@ const handleAddCategory = (e) => {
               <td>{cat.name}</td>
               <td>{cat.slug}</td>
               <td>
-                <button className="btn btn-sm btn-info me-2">Edit</button>
-                <button className="btn btn-sm btn-danger">Delete</button>
+                <button className="btn btn-sm btn-info me-2" onClick={() => openEditModal(cat)}>Edit</button>
+                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteCategory(cat.id)} >Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Modal for Adding Category */}
-      <div className="modal fade" id="categoryModal" tabIndex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+      {/* ADD Modal */}
+      <div className="modal fade" id="categoryModal" tabIndex="-1">
         <div className="modal-dialog">
           <div className="modal-content">
             <form id="addCategoryForm" onSubmit={handleAddCategory}>
               <div className="modal-header">
-                <h5 className="modal-title" id="categoryModalLabel">Add Category</h5>
-                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 className="modal-title">Add Category</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" />
               </div>
               <div className="modal-body">
-                <div className="mb-3">
-                  <label htmlFor="name" className="form-label">Category Name</label>
-                  <input type="text" className="form-control" id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="slug" className="form-label">Slug</label>
-                  <input type="text" className="form-control" id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
-                </div>
+                <input type="text" className="form-control mb-2" placeholder="Category Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <input type="text" className="form-control" placeholder="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
               </div>
               <div className="modal-footer">
                 <button type="submit" className="btn btn-primary">Add</button>
@@ -123,6 +156,29 @@ const handleAddCategory = (e) => {
           </div>
         </div>
       </div>
+
+      {/* EDIT Modal */}
+      <div className="modal fade" id="editCategoryModal" tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <form onSubmit={handleUpdateCategory}>
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Category</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" />
+              </div>
+              <div className="modal-body">
+                <input type="text" className="form-control mb-2" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                <input type="text" className="form-control" value={editSlug} onChange={(e) => setEditSlug(e.target.value)} required />
+              </div>
+              <div className="modal-footer">
+                <button type="submit" className="btn btn-success">Update</button>
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };
