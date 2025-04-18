@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// import 'bootstrap/dist/css/bootstrap.min.css';
-// import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { Modal } from 'bootstrap';
 import Swal from 'sweetalert2';
 const Category = () => {
@@ -19,15 +19,26 @@ const Category = () => {
   }, []);
 
   const fetchCategories = () => {
-    axios.get('http://127.0.0.1:8000/api/categories')
+    const token = localStorage.getItem('token');
+
+    axios.get('http://127.0.0.1:8000/api/categories',{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then(res => setCategories(res.data.data))
       .catch(err => console.error('Failed to fetch categories', err));
   };
 
   // ADD CATEGORY
   const handleAddCategory = (e) => {
+    const token = localStorage.getItem('token');
     e.preventDefault();
-    axios.post('http://127.0.0.1:8000/api/categories', { name, slug })
+    axios.post('http://127.0.0.1:8000/api/categories', { name, slug },{
+       headers: {
+         Authorization : `Bearer ${token}`
+       }
+    })
       .then(res => {
         fetchCategories();
         setName('');
@@ -53,10 +64,15 @@ const Category = () => {
 
   // HANDLE UPDATE CATEGORY
   const handleUpdateCategory = (e) => {
+    const token = localStorage.getItem('token'); 
     e.preventDefault();
     axios.put(`http://127.0.0.1:8000/api/categories/${editId}`, {
       name: editName,
       slug: editSlug
+    },{
+      headers : {
+         Authorization: `Bearer ${token}`,
+      }
     })
       .then(res => {
         fetchCategories();
@@ -71,6 +87,7 @@ const Category = () => {
 
   //handle delete feature
   const handleDeleteCategory = (id) => {
+    const token = localStorage.getItem('token'); 
     Swal.fire({
       title: 'Are you sure?',
       text: 'This action cannot be undone!',
@@ -81,7 +98,11 @@ const Category = () => {
       confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.delete(`http://127.0.0.1:8000/api/categories/${id}`)
+        axios.delete(`http://127.0.0.1:8000/api/categories/${id}`,{
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
           .then(() => {
             fetchCategories();
             Swal.fire('Deleted!', 'Category has been deleted.', 'success');
