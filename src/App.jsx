@@ -6,6 +6,8 @@ import Category from './pages/CategoryPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import Brand from './pages/BrandPage';
+import Product from './pages/ProductPage';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/category" element={<ProtectedRoute><Category /></ProtectedRoute>} />
+            <Route path='/brand'  element={<ProtectedRoute> <Brand/> </ProtectedRoute>}  > </Route>
+            <Route path='/product'  element={<ProtectedRoute> <Product/> </ProtectedRoute>}  > </Route>
           </Routes>
         </div>
       </div>

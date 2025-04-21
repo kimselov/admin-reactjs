@@ -120,7 +120,7 @@ const Category = () => {
     const backdrop = document.querySelector('.modal-backdrop');
     if (backdrop) backdrop.remove();
     document.body.classList.remove('modal-open'); //allow user to scroll
-    document.body.style = '';
+    document.body.style.overflow = 'auto';
   };
 
   return (

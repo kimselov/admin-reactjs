@@ -22,7 +22,8 @@ const Sidebar = () => {
           {/* <li><a className="nav-link" href="form.html"><i className="fas fa-hand-point-right"></i> <span>Form</span></a></li> */}
           {/* <li><a className="nav-link" href="table.html"><i className="fas fa-hand-point-right"></i> <span>Table</span></a></li> */}
         <li><Link to="/category" className="nav-link"><i className="fas fa-hand-point-right"></i> <span>Category</span></Link></li>
-
+        <li><Link to="/brand" className="nav-link"><i className="fas fa-hand-point-right"></i> <span>Brand</span></Link></li>
+        <li><Link to="/product" className="nav-link"><i className="fas fa-hand-point-right"></i> <span>Product</span></Link></li>
           <li><a className="nav-link" href="invoice.html"><i className="fas fa-hand-point-right"></i> <span>Invoice</span></a></li>
         </ul>
       </aside>
